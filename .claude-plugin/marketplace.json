@@ -9,7 +9,16 @@
     {
       "name": "adrev",
       "source": "./",
-      "description": "Adversarial PR review that proves its findings: gates first, read-only review sessions that try to break the change and run repros in isolation, a fresh verifier, and a computed verdict."
+      "description": "Adversarial PR review that proves its findings: gates first, read-only review sessions that try to break the change and run repros in isolation, a fresh verifier, and a computed verdict.",
+      "category": "development",
+      "tags": [
+        "code-review",
+        "pull-request",
+        "adversarial",
+        "verification",
+        "repro",
+        "quality"
+      ]
     }
   ]
 }
