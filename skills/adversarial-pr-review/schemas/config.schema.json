@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "config.schema.json",
+  "title": "review.config.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repo"],
+  "$defs": {
+    "argv": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "globs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "severity": {"enum": ["critical", "major", "minor", "nit"]},
+    "effort": {"enum": ["low", "medium", "high", "xhigh", "max"]},
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "argv", "parser", "timeout_s"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,40}$"},
+        "argv": {"$ref": "#/$defs/argv"},
+        "parser": {"enum": ["ruff", "ruff-format", "mypy", "pytest", "regex", "exit"]},
+        "diagnostics_argv": {"$ref": "#/$defs/argv"},
+        "regex": {"type": "string"},
+        "env": {"type": "object", "additionalProperties": {"type": "string"}},
+        "error_count_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["baseline_file", "op"],
+          "properties": {
+            "baseline_file": {"type": "string", "minLength": 1},
+            "op": {"enum": ["<=", "<"]}
+          }
+        },
+        "coverage_xml": {"type": "string", "minLength": 1},
+        "timeout_s": {"type": "integer", "minimum": 1, "maximum": 7200},
+        "ci_file": {"type": "string"},
+        "ci_job": {"type": "string"}
+      }
+    },
+    "lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "effort", "enabled", "timeout_s", "max_turns"],
+      "properties": {
+        "model": {"type": "string", "minLength": 1},
+        "effort": {"$ref": "#/$defs/effort"},
+        "enabled": {"type": "boolean"},
+        "timeout_s": {"type": "integer", "minimum": 30, "maximum": 7200},
+        "max_turns": {"type": "integer", "minimum": 1, "maximum": 1000}
+      }
+    },
+    "price": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output", "cache_read", "cache_write"],
+      "properties": {
+        "input": {"type": "number", "minimum": 0},
+        "output": {"type": "number", "minimum": 0},
+        "cache_read": {"type": "number", "minimum": 0},
+        "cache_write": {"type": "number", "minimum": 0}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "1"},
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_ref", "remote", "gates", "changelogs", "conventions_docs", "file_classes", "sensitive_paths", "security_patterns"],
+      "properties": {
+        "base_ref": {"type": ["string", "null"]},
+        "remote": {"type": "string", "minLength": 1},
+        "python_paths": {"$ref": "#/$defs/globs"},
+        "import_checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["module", "path_prefix"],
+            "properties": {"module": {"type": "string"}, "path_prefix": {"type": "string"}}
+          }
+        },
+        "gates": {"type": "array", "items": {"$ref": "#/$defs/gate"}},
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ignore_codes": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": {"type": "boolean"},
+                "ruff_argv": {"$ref": "#/$defs/argv"},
+                "mypy_argv": {"$ref": "#/$defs/argv"}
+              }
+            },
+            "tests_run": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": {"type": "boolean"},
+                "test_globs": {"$ref": "#/$defs/globs"},
+                "gate": {"type": "string"}
+              }
+            },
+            "diff_coverage": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {"enabled": {"type": "boolean"}, "gate": {"type": "string"}}
+            }
+          }
+        },
+        "severity_map": {"type": "object", "additionalProperties": {"$ref": "#/$defs/severity"}},
+        "changelogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "globs", "skip_marker"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "globs": {"$ref": "#/$defs/globs"},
+              "skip_marker": {"type": "string", "minLength": 1},
+              "section_pattern": {"type": "string"}
+            }
+          }
+        },
+        "conventions_docs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path"],
+            "properties": {"path": {"type": "string"}, "sections": {"type": "array", "items": {"type": "string"}}}
+          }
+        },
+        "file_classes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "docs": {"$ref": "#/$defs/globs"},
+            "changelogs": {"$ref": "#/$defs/globs"},
+            "tests": {"$ref": "#/$defs/globs"},
+            "generated": {"$ref": "#/$defs/globs"},
+            "vendored": {"$ref": "#/$defs/globs"},
+            "lockfiles": {"$ref": "#/$defs/globs"},
+            "dependency_manifests": {"$ref": "#/$defs/globs"},
+            "public_interface": {"$ref": "#/$defs/globs"}
+          }
+        },
+        "review_inputs": {"$ref": "#/$defs/globs"},
+        "tool_tables": {"type": "array", "items": {"type": "string"}},
+        "sensitive_paths": {"$ref": "#/$defs/globs"},
+        "security_patterns": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "injection_patterns": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "diff_coverage_threshold": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "lanes": {"type": "object", "additionalProperties": {"$ref": "#/$defs/lane"}},
+    "external": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider"],
+      "properties": {
+        "provider": {"enum": ["none", "codex"]},
+        "codex_bin": {"type": "string", "minLength": 1},
+        "model": {"type": ["string", "null"]},
+        "timeout_s": {"type": "integer", "minimum": 30},
+        "allow_globs": {"$ref": "#/$defs/globs"},
+        "deny_globs": {"$ref": "#/$defs/globs"}
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "isolation": {"enum": ["auto", "docker", "bwrap", "none"]},
+        "require_network_isolation": {"type": "boolean"},
+        "auto_pull": {"type": "boolean"},
+        "image": {"type": "string"},
+        "timeout_s": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "output_cap_bytes": {"type": "integer", "minimum": 1024},
+        "repro_dir": {"type": "string", "minLength": 1},
+        "allow": {"type": "array", "items": {"$ref": "#/$defs/argv"}}
+      }
+    },
+    "flaky_reruns": {"type": "integer", "minimum": 0, "maximum": 10},
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size_thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "small_lines": {"type": "integer", "minimum": 1},
+            "medium_lines": {"type": "integer", "minimum": 1},
+            "max_files": {"type": "integer", "minimum": 1}
+          }
+        },
+        "unit_size_cap": {"type": "integer", "minimum": 20},
+        "max_review_lines": {"type": "integer", "minimum": 1},
+        "max_rounds": {"type": "integer", "minimum": 1, "maximum": 10},
+        "min_successful_lanes": {"type": "integer", "minimum": 1},
+        "late_finding_min_severity": {"$ref": "#/$defs/severity"},
+        "full_rereview_delta_ratio": {"type": "number", "minimum": 0},
+        "verify_cap": {"type": "integer", "minimum": 0},
+        "estimate_scale": {"type": "number", "minimum": 0.05, "maximum": 10},
+        "max_parallel_calls": {"type": "integer", "minimum": 1, "maximum": 16},
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "per_run_usd": {"type": "number", "minimum": 0},
+            "per_run_loop_usd": {"type": "number", "minimum": 0}
+          }
+        },
+        "untracked_size_cap": {"type": "integer", "minimum": 0},
+        "stale_fetch_age_hours": {"type": "integer", "minimum": 0},
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {"keep_runs": {"type": "integer", "minimum": 1}, "keep_worktrees": {"type": "boolean"}}
+        },
+        "run_dir": {"type": "string", "minLength": 1},
+        "claude_bin": {"type": "string", "minLength": 1}
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["as_of", "models"],
+      "properties": {
+        "as_of": {"type": "string"},
+        "source": {"type": "string"},
+        "models": {"type": "object", "additionalProperties": {"$ref": "#/$defs/price"}}
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "known_preexisting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "reason"],
+            "properties": {
+              "key": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "tool": {"type": "string"},
+                  "rule": {"type": "string"},
+                  "file": {"type": "string"},
+                  "symbol": {"type": "string"},
+                  "fingerprint": {"type": "string"}
+                }
+              },
+              "reason": {"type": "string", "minLength": 3}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adjudicator-output.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ruling",
+    "evidence_kind",
+    "citations",
+    "reason"
+  ],
+  "$defs": {
+    "side": {
+      "enum": [
+        "head",
+        "base"
+      ]
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "file",
+        "line",
+        "quote"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/side"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "quote": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "ruling": {
+      "enum": [
+        "UPHOLD",
+        "REJECT",
+        "UNRESOLVED"
+      ]
+    },
+    "evidence_kind": {
+      "enum": [
+        "executed",
+        "citation_chain",
+        "file_line",
+        "none"
+      ]
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cite"
+      }
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

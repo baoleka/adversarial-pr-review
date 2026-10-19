@@ -1,0 +1,26 @@
+{
+  "name": "tests",
+  "items": [
+    {
+      "id": "TS1",
+      "lanes": [
+        "tests"
+      ],
+      "text": "Check that the changed tests run (they are collected and executed in the gate results) and assert the right thing, not just that no exception was raised."
+    },
+    {
+      "id": "TS2",
+      "lanes": [
+        "tests"
+      ],
+      "text": "Check for mocks or fakes that hide the bug the test is meant to catch, and for order dependence, time dependence or randomness that makes a test flaky."
+    },
+    {
+      "id": "TS3",
+      "lanes": [
+        "tests"
+      ],
+      "text": "Check the repo's test conventions (given under Conventions) on the changed tests."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "baoleka",
+  "owner": {
+    "name": "baoleka",
+    "url": "https://github.com/baoleka"
+  },
+  "description": "baoleka's Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "adrev",
+      "source": "./",
+      "description": "Adversarial PR review that proves its findings: gates first, read-only review sessions that try to break the change and run repros in isolation, a fresh verifier, and a computed verdict."
+    }
+  ]
+}

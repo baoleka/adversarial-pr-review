@@ -1,0 +1,18 @@
+adrev (Adversarial PR Review) for Claude Code
+Copyright 2026 baoleka
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This plugin contains no code or text copied from other projects. Several of its design ideas come
+from these projects, credited with thanks:
+
+- anthropics/claude-plugins-official (code-review): parallel review lenses, an eligibility check,
+  and the list of findings that reviews should leave out.
+- addyosmani/adverse: review lenses that stay in their lane, a challenge round, provenance labels
+  and its published lessons on failure modes.
+- ng/adversarial-review: mechanical checks before model calls, evidence-tied confidence, and
+  labeling instead of silently dropping.
+- poteto/noodle: scaling the number of review lenses with the size of the change.
+- basicmachines-co/basic-memory: mutual refutation and confidence derived from provenance.
+- "Adversarial Review: Structured Disagreement for Grounded Agentic Code Review" (Qiu and Gill,
+  2026): requiring evidence for a refutation.

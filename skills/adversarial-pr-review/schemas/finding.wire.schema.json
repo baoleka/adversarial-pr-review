@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finding.wire.schema.json",
+  "title": "Lane output (strict: every property required, nullable via unions, no extra properties)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "notes"
+  ],
+  "$defs": {
+    "side": {
+      "enum": [
+        "head",
+        "base"
+      ]
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "file",
+        "line"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/side"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        }
+      }
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "file",
+        "line",
+        "quote"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/side"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "quote": {
+          "type": "string"
+        }
+      }
+    },
+    "repro": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "filename",
+        "content",
+        "command",
+        "expected_failure",
+        "expected_difference"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "test",
+            "command",
+            "differential"
+          ]
+        },
+        "filename": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_failure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_difference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "severity",
+        "title",
+        "kind",
+        "location",
+        "introduced_by",
+        "failure_scenario",
+        "evidence",
+        "suggested_fix",
+        "self_confidence"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "correctness",
+            "regression",
+            "behavior-change",
+            "contract",
+            "error-handling",
+            "concurrency",
+            "resource",
+            "security",
+            "test-quality",
+            "scope",
+            "performance"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "major",
+            "minor",
+            "nit"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "defect",
+            "omission"
+          ]
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "side",
+            "file",
+            "start_line",
+            "end_line",
+            "quote",
+            "symbol"
+          ],
+          "properties": {
+            "side": {
+              "$ref": "#/$defs/side"
+            },
+            "file": {
+              "type": "string"
+            },
+            "start_line": {
+              "type": "integer"
+            },
+            "end_line": {
+              "type": "integer"
+            },
+            "quote": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "symbol": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "introduced_by": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anchor"
+          }
+        },
+        "failure_scenario": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conditions",
+            "expected",
+            "actual"
+          ],
+          "properties": {
+            "conditions": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "actual": {
+              "type": "string"
+            }
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "citation_chain",
+            "repro",
+            "observed_output"
+          ],
+          "properties": {
+            "level": {
+              "enum": [
+                "executed",
+                "traced",
+                "reasoned"
+              ]
+            },
+            "citation_chain": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/cite"
+              }
+            },
+            "repro": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/repro"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "observed_output": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "suggested_fix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "self_confidence": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

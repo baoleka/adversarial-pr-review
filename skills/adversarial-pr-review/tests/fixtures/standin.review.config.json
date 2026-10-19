@@ -1,0 +1,187 @@
+{
+  "schema_version": "1",
+  "repo": {
+    "base_ref": "origin/master",
+    "remote": "origin",
+    "python_paths": ["src"],
+    "import_checks": [{"module": "click", "path_prefix": "src/click"}],
+    "gates": [
+      {
+        "name": "ruff-check",
+        "argv": ["ruff", "check", "--no-fix", "."],
+        "parser": "ruff",
+        "diagnostics_argv": ["ruff", "check", "--no-fix", "--exit-zero", "--output-format", "json", "."],
+        "timeout_s": 300,
+        "ci_file": ".github/workflows/ci.yml",
+        "ci_job": "gates"
+      },
+      {
+        "name": "ruff-format",
+        "argv": ["ruff", "format", "--check", "."],
+        "parser": "ruff-format",
+        "timeout_s": 300,
+        "ci_file": ".github/workflows/ci.yml",
+        "ci_job": "gates"
+      },
+      {
+        "name": "mypy",
+        "argv": ["python", "scripts/mypy_gate.py"],
+        "parser": "mypy",
+        "diagnostics_argv": ["python", "-m", "mypy", "-O", "json"],
+        "error_count_gate": {"baseline_file": ".mypy-error-count", "op": "<="},
+        "timeout_s": 900,
+        "ci_file": ".github/workflows/ci.yml",
+        "ci_job": "gates"
+      },
+      {
+        "name": "pytest",
+        "argv": ["pytest", "-v", "--tb=short", "--cov", "--cov-report=xml"],
+        "parser": "pytest",
+        "coverage_xml": "coverage.xml",
+        "timeout_s": 900,
+        "ci_file": ".github/workflows/ci.yml",
+        "ci_job": "gates"
+      }
+    ],
+    "checks": {
+      "ignore_codes": {
+        "enabled": true,
+        "ruff_argv": ["ruff", "check", "--no-fix", "--exit-zero", "--output-format", "json", "--extend-select", "PGH003,PGH004,RUF100", "."],
+        "mypy_argv": ["python", "-m", "mypy", "-O", "json", "--enable-error-code", "ignore-without-code", "--warn-unused-ignores"]
+      },
+      "tests_run": {"enabled": true, "test_globs": ["tests/**/test_*.py"], "gate": "pytest"},
+      "diff_coverage": {"enabled": true, "gate": "pytest"}
+    },
+    "severity_map": {
+      "gate:fails-ci": "major",
+      "gate:default": "minor",
+      "check:ignore-bare": "major",
+      "check:ignore-blanket": "major",
+      "check:ignore-unused": "minor",
+      "check:changelog-missing": "major",
+      "check:changelog-misplaced": "minor",
+      "check:test-uncollected": "major",
+      "check:test-unexecuted": "major",
+      "check:test-new-skip": "minor",
+      "check:diff-coverage": "minor",
+      "check:review-integrity": "major"
+    },
+    "changelogs": [
+      {"path": "CHANGELOG.md", "globs": ["src/click/**"], "skip_marker": "changelog: skip", "section_pattern": "^## Unreleased\\s*$"},
+      {"path": "RD-CHANGELOG.md", "globs": ["examples/**"], "skip_marker": "changelog: skip", "section_pattern": "^## Unreleased\\s*$"}
+    ],
+    "conventions_docs": [{"path": "AGENTS.md", "sections": ["Areas", "PR Checklist", "Tests"]}],
+    "file_classes": {
+      "docs": ["docs/**", "artwork/**", "*.md", "*.rst", "examples/README"],
+      "changelogs": ["CHANGELOG.md", "RD-CHANGELOG.md", "CHANGES.rst"],
+      "tests": ["tests/**"],
+      "generated": [],
+      "vendored": [],
+      "lockfiles": ["requirements/*.txt"],
+      "dependency_manifests": ["pyproject.toml", "requirements/**"],
+      "public_interface": ["src/click/**/*.py"]
+    },
+    "review_inputs": [
+      "review.config.json",
+      ".claude/review.config.json",
+      ".github/workflows/**",
+      ".mypy-error-count",
+      "setup.cfg",
+      "tox.ini",
+      "mypy.ini",
+      ".mypy.ini",
+      "ruff.toml",
+      ".ruff.toml",
+      "pytest.ini",
+      ".coveragerc",
+      ".pre-commit-config.yaml",
+      "scripts/mypy_gate.py",
+      "scripts/changelog_gate.py",
+      ".claude/settings*",
+      ".claude/skills/adversarial-review-v2/**",
+      ".claude/agents/review-*"
+    ],
+    "tool_tables": ["tool.mypy", "tool.ruff", "tool.pytest", "tool.coverage", "tool.black"],
+    "sensitive_paths": [
+      "src/click/_termui_impl.py",
+      "src/click/utils.py",
+      "src/click/shell_completion.py",
+      "src/click/_compat.py",
+      ".github/workflows/**",
+      "pyproject.toml",
+      "requirements/**"
+    ],
+    "security_patterns": [
+      "\\bsubprocess\\b",
+      "\\bos\\.system\\b",
+      "shell\\s*=\\s*True",
+      "\\beval\\(",
+      "\\bexec\\(",
+      "\\bpickle\\b",
+      "\\byaml\\.load\\(",
+      "\\btempfile\\.mktemp\\b",
+      "\\bos\\.chmod\\b",
+      "\\bos\\.environ\\b"
+    ],
+    "diff_coverage_threshold": 0.8
+  },
+  "lanes": {
+    "breaker": {"model": "claude-opus-5-5", "effort": "xhigh", "enabled": true, "timeout_s": 1500, "max_turns": 80},
+    "external": {"model": "claude-sonnet-5-5", "effort": "high", "enabled": true, "timeout_s": 1500, "max_turns": 80},
+    "contracts": {"model": "claude-opus-5-5", "effort": "high", "enabled": true, "timeout_s": 1500, "max_turns": 80},
+    "tests": {"model": "claude-sonnet-5-5", "effort": "high", "enabled": true, "timeout_s": 1200, "max_turns": 60},
+    "security": {"model": "claude-opus-5-5", "effort": "high", "enabled": true, "timeout_s": 1500, "max_turns": 80},
+    "interface": {"model": "claude-opus-5-5", "effort": "high", "enabled": true, "timeout_s": 1200, "max_turns": 60},
+    "delta": {"model": "claude-opus-5-5", "effort": "high", "enabled": true, "timeout_s": 1200, "max_turns": 60},
+    "verifier": {"model": "claude-opus-5-5", "effort": "xhigh", "enabled": true, "timeout_s": 1200, "max_turns": 60},
+    "fixcheck": {"model": "claude-opus-5-5", "effort": "high", "enabled": true, "timeout_s": 900, "max_turns": 40},
+    "adjudicator": {"model": "claude-fable-5-1", "effort": "high", "enabled": true, "timeout_s": 1200, "max_turns": 60},
+    "probe": {"model": "claude-haiku-5-5", "effort": "low", "enabled": true, "timeout_s": 240, "max_turns": 8}
+  },
+  "external": {
+    "provider": "none",
+    "model": null,
+    "timeout_s": 1200,
+    "allow_globs": ["**"],
+    "deny_globs": [".env*", "**/.env*", "**/secrets/**", "**/*.pem", "**/*.key"]
+  },
+  "replay": {
+    "isolation": "auto",
+    "require_network_isolation": true,
+    "image": "ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac",
+    "timeout_s": 120,
+    "output_cap_bytes": 65536,
+    "allow": [
+      ["python", "-m", "pytest", "{repro}"],
+      ["python", "{repro}"]
+    ]
+  },
+  "flaky_reruns": 3,
+  "limits": {
+    "size_thresholds": {"small_lines": 50, "medium_lines": 200, "max_files": 5},
+    "unit_size_cap": 400,
+    "max_review_lines": 2000,
+    "max_rounds": 3,
+    "min_successful_lanes": 2,
+    "late_finding_min_severity": "major",
+    "full_rereview_delta_ratio": 0.5,
+    "verify_cap": 5,
+    "max_parallel_calls": 4,
+    "budget": {"per_run_usd": 15.0, "per_run_loop_usd": 30.0},
+    "untracked_size_cap": 1048576,
+    "stale_fetch_age_hours": 72,
+    "retention": {"keep_runs": 5, "keep_worktrees": false},
+    "run_dir": ".reviews"
+  },
+  "pricing": {
+    "as_of": "2026-10-06",
+    "source": "claude-api skill model table; cache_write = 1.25 x input; Haiku cache_read estimated",
+    "models": {
+      "claude-fable-5-1": {"input": 10.0, "output": 50.0, "cache_read": 0.25, "cache_write": 12.5},
+      "claude-opus-5-5": {"input": 4.0, "output": 20.0, "cache_read": 0.2, "cache_write": 5.0},
+      "claude-sonnet-5-5": {"input": 2.0, "output": 10.0, "cache_read": 0.2, "cache_write": 2.5},
+      "claude-haiku-5-5": {"input": 0.1, "output": 0.5, "cache_read": 0.01, "cache_write": 0.125}
+    }
+  },
+  "overrides": {"known_preexisting": []}
+}

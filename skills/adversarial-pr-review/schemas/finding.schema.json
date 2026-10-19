@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finding.schema.json",
+  "title": "Finding (full, written by the pipeline)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "fingerprint", "origin", "category", "severity", "title", "kind", "location", "introduced_by",
+    "failure_scenario", "evidence", "suggested_fix", "self_confidence", "lane", "model", "lens", "provenance",
+    "replay", "verification", "preexisting", "confidence", "blocking", "bucket", "status", "rounds_seen",
+    "disposition", "adjudication"
+  ],
+  "$defs": {
+    "side": {"enum": ["head", "base"]},
+    "path": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"},
+    "line": {"type": "integer", "minimum": 1},
+    "text": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "file", "line"],
+      "properties": {"side": {"$ref": "#/$defs/side"}, "file": {"$ref": "#/$defs/path"}, "line": {"$ref": "#/$defs/line"}}
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "file", "line", "quote"],
+      "properties": {
+        "side": {"$ref": "#/$defs/side"},
+        "file": {"$ref": "#/$defs/path"},
+        "line": {"$ref": "#/$defs/line"},
+        "quote": {"$ref": "#/$defs/text"}
+      }
+    },
+    "repro": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "filename", "content", "command", "expected_failure", "expected_difference"],
+      "properties": {
+        "kind": {"enum": ["test", "command", "differential"]},
+        "filename": {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,80}\\.py$"},
+        "content": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "command": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "maxLength": 256}},
+        "expected_failure": {"type": ["string", "null"], "maxLength": 500},
+        "expected_difference": {"type": ["string", "null"], "maxLength": 1000}
+      }
+    },
+    "side_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "signature", "exit_code", "output_ref", "runs"],
+      "properties": {
+        "outcome": {"enum": ["pass", "fail-as-claimed", "error", "timeout", "not-run"]},
+        "signature": {"type": ["string", "null"]},
+        "exit_code": {"type": ["integer", "null"]},
+        "output_ref": {"type": ["string", "null"]},
+        "runs": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "properties": {
+    "id": {"type": "string", "pattern": "^F-[0-9a-f]{12}$"},
+    "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "origin": {"enum": ["lane", "gate", "check"]},
+    "category": {
+      "enum": [
+        "correctness", "regression", "behavior-change", "contract", "error-handling", "concurrency", "resource",
+        "security", "test-quality", "scope", "performance", "typing", "suppression", "lint", "format",
+        "test-failure", "test-not-run", "changelog", "coverage", "review-integrity"
+      ]
+    },
+    "severity": {"enum": ["critical", "major", "minor", "nit"]},
+    "title": {"type": "string", "minLength": 5, "maxLength": 160},
+    "kind": {"enum": ["defect", "omission"]},
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "file", "start_line", "end_line", "quote", "symbol"],
+      "properties": {
+        "side": {"$ref": "#/$defs/side"},
+        "file": {"$ref": "#/$defs/path"},
+        "start_line": {"$ref": "#/$defs/line"},
+        "end_line": {"$ref": "#/$defs/line"},
+        "quote": {"anyOf": [{"$ref": "#/$defs/text"}, {"type": "null"}]},
+        "symbol": {"type": ["string", "null"], "maxLength": 256}
+      }
+    },
+    "introduced_by": {"type": "array", "maxItems": 20, "items": {"$ref": "#/$defs/anchor"}},
+    "failure_scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conditions", "expected", "actual"],
+      "properties": {
+        "conditions": {"$ref": "#/$defs/text"},
+        "expected": {"$ref": "#/$defs/text"},
+        "actual": {"$ref": "#/$defs/text"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "citation_chain", "repro", "observed_output", "tool_output_ref"],
+      "properties": {
+        "level": {"enum": ["executed", "traced", "reasoned"]},
+        "citation_chain": {"type": "array", "maxItems": 30, "items": {"$ref": "#/$defs/cite"}},
+        "repro": {"anyOf": [{"$ref": "#/$defs/repro"}, {"type": "null"}]},
+        "observed_output": {"type": ["string", "null"], "maxLength": 8000},
+        "tool_output_ref": {"type": ["string", "null"]}
+      }
+    },
+    "suggested_fix": {"type": ["string", "null"], "maxLength": 4000},
+    "self_confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "lane": {"type": ["string", "null"]},
+    "model": {"type": ["string", "null"]},
+    "lens": {"type": ["string", "null"]},
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["origin", "lane", "model", "lens", "round", "raw_ref"],
+        "properties": {
+          "origin": {"enum": ["lane", "gate", "check"]},
+          "lane": {"type": ["string", "null"]},
+          "model": {"type": ["string", "null"]},
+          "lens": {"type": ["string", "null"]},
+          "round": {"type": "integer", "minimum": 1},
+          "raw_ref": {"type": "string"}
+        }
+      }
+    },
+    "replay": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["head", "base", "classification", "reason"],
+          "properties": {
+            "head": {"$ref": "#/$defs/side_result"},
+            "base": {"$ref": "#/$defs/side_result"},
+            "classification": {"enum": ["introduced", "pre-existing", "not-demonstrated", "not-replayed"]},
+            "reason": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "verification": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["verdict", "by", "evidence", "expectation_source", "severity_assessment"],
+          "properties": {
+            "verdict": {"enum": ["CONFIRMED", "REFUTED", "UNSUBSTANTIATED"]},
+            "by": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["model", "call_id"],
+              "properties": {"model": {"type": "string"}, "call_id": {"type": "string"}}
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "citations", "executed_ref"],
+              "properties": {
+                "kind": {"enum": ["executed", "citation_chain", "file_line", "counter_test", "none"]},
+                "citations": {"type": "array", "items": {"$ref": "#/$defs/cite"}},
+                "executed_ref": {"type": ["string", "null"]}
+              }
+            },
+            "expectation_source": {"enum": ["intent", "docs", "tests", "contract", "none"]},
+            "severity_assessment": {"enum": ["agree", "lower", "higher"]}
+          }
+        }
+      ]
+    },
+    "preexisting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "reason"],
+      "properties": {
+        "value": {"type": "boolean"},
+        "reason": {"enum": ["none", "replay", "gate-diff", "known_preexisting", "not-anchored"]}
+      }
+    },
+    "confidence": {"enum": ["certain", "high", "medium", "low", "unverified"]},
+    "blocking": {"type": "boolean"},
+    "bucket": {"enum": ["blocking", "must-address", "contested", "non-blocking", "pre-existing", "out-of-scope", "rejected", "suppressed"]},
+    "status": {"enum": ["open", "fixed", "not-fixed", "regressed", "refuted", "refuted-by-adjudication", "deferred", "suppressed", "acknowledged"]},
+    "rounds_seen": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "disposition": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "note", "diverges_from_suggestion", "reason", "evidence"],
+          "properties": {
+            "action": {"enum": ["fix", "dispute", "defer"]},
+            "note": {"type": "string", "maxLength": 2000},
+            "diverges_from_suggestion": {"type": "boolean"},
+            "reason": {"type": ["string", "null"], "maxLength": 2000},
+            "evidence": {"type": "array", "items": {"$ref": "#/$defs/cite"}}
+          }
+        }
+      ]
+    },
+    "adjudication": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ruling", "by", "evidence", "reason"],
+          "properties": {
+            "ruling": {"enum": ["UPHOLD", "REJECT", "UNRESOLVED"]},
+            "by": {"type": "string"},
+            "evidence": {"type": "array", "items": {"$ref": "#/$defs/cite"}},
+            "reason": {"type": "string"}
+          }
+        }
+      ]
+    }
+  }
+}

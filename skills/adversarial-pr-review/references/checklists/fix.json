@@ -1,0 +1,20 @@
+{
+  "name": "fix",
+  "items": [
+    {
+      "id": "FX1",
+      "lanes": [
+        "breaker",
+        "external"
+      ],
+      "text": "Check the fix handles every input that triggered the original bug, not just the reported one, and doesn't change behavior for inputs that were already correct."
+    },
+    {
+      "id": "FX2",
+      "lanes": [
+        "tests"
+      ],
+      "text": "A fix needs a regression test that fails at base and passes at head. Run it at both sides with the replay tool (--side both) and report the result."
+    }
+  ]
+}

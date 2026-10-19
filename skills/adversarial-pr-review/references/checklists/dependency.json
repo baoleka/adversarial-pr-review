@@ -1,0 +1,13 @@
+{
+  "name": "dependency",
+  "items": [
+    {
+      "id": "DP1",
+      "lanes": [
+        "contracts",
+        "security"
+      ],
+      "text": "For a dependency change, check the changed versions against the code that uses them: removed or renamed APIs, changed defaults, and newly required Python versions."
+    }
+  ]
+}

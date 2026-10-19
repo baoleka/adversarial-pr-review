@@ -1,0 +1,21 @@
+{
+  "name": "adrev",
+  "displayName": "Adversarial PR Review",
+  "version": "2.0.0",
+  "description": "Adversarial PR review that proves its findings: gates first, read-only review sessions that try to break the change and run repros in isolation, a fresh verifier, and a computed verdict.",
+  "author": {
+    "name": "baoleka",
+    "url": "https://github.com/baoleka"
+  },
+  "homepage": "https://github.com/baoleka/adversarial-pr-review",
+  "repository": "https://github.com/baoleka/adversarial-pr-review",
+  "license": "Apache-2.0",
+  "keywords": [
+    "code-review",
+    "pull-request",
+    "adversarial",
+    "verification",
+    "repro",
+    "quality"
+  ]
+}

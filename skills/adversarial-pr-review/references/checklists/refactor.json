@@ -1,0 +1,30 @@
+{
+  "name": "refactor",
+  "items": [
+    {
+      "id": "RF1",
+      "lanes": [
+        "breaker",
+        "external",
+        "contracts"
+      ],
+      "text": "A refactor must keep observable behavior identical. Run the same differential repro at base and head for each moved or rewritten code path; any difference in output, exceptions or side effects is a finding."
+    },
+    {
+      "id": "RF2",
+      "lanes": [
+        "breaker",
+        "external",
+        "contracts"
+      ],
+      "text": "Check argument and field order at every call site the refactor rewrote, and that removed parameters (including **kwargs) were really unused: Grep the instantiation and call sites."
+    },
+    {
+      "id": "RF3",
+      "lanes": [
+        "contracts"
+      ],
+      "text": "Check that defaults, keyword names, public names and import paths that callers outside the package may rely on still exist and behave the same."
+    }
+  ]
+}

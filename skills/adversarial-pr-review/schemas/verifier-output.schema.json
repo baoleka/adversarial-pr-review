@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "verifier-output.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rulings"
+  ],
+  "$defs": {
+    "side": {
+      "enum": [
+        "head",
+        "base"
+      ]
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "file",
+        "line",
+        "quote"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/side"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "quote": {
+          "type": "string"
+        }
+      }
+    },
+    "repro": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "filename",
+        "content",
+        "command",
+        "expected_failure",
+        "expected_difference"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "test",
+            "command",
+            "differential"
+          ]
+        },
+        "filename": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_failure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_difference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "rulings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_ref",
+          "verdict",
+          "evidence_kind",
+          "citations",
+          "counter_test",
+          "expectation_source",
+          "severity_assessment",
+          "reason"
+        ],
+        "properties": {
+          "finding_ref": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "CONFIRMED",
+              "REFUTED",
+              "UNSUBSTANTIATED"
+            ]
+          },
+          "evidence_kind": {
+            "enum": [
+              "executed",
+              "citation_chain",
+              "file_line",
+              "counter_test",
+              "none"
+            ]
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/cite"
+            }
+          },
+          "counter_test": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/repro"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectation_source": {
+            "enum": [
+              "intent",
+              "docs",
+              "tests",
+              "contract",
+              "none"
+            ]
+          },
+          "severity_assessment": {
+            "enum": [
+              "agree",
+              "lower",
+              "higher"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

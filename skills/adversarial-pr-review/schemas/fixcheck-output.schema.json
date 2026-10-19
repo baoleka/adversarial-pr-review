@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fixcheck-output.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rulings"
+  ],
+  "$defs": {
+    "side": {
+      "enum": [
+        "head",
+        "base"
+      ]
+    },
+    "cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "file",
+        "line",
+        "quote"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/side"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        },
+        "quote": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "rulings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_ref",
+          "verdict",
+          "citations",
+          "reason"
+        ],
+        "properties": {
+          "finding_ref": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "FIXED",
+              "NOT_FIXED",
+              "REGRESSED"
+            ]
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/cite"
+            }
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "security",
+  "items": [
+    {
+      "id": "SC1",
+      "lanes": [
+        "security"
+      ],
+      "text": "Trace untrusted input (arguments, environment variables, file names and contents, config) into subprocess calls, shell strings, file paths, deserializers and format strings on the changed lines."
+    },
+    {
+      "id": "SC2",
+      "lanes": [
+        "security"
+      ],
+      "text": "Check new or changed file handling for path traversal, unsafe temporary files, permissions, symlink races (TOCTOU) and partial writes."
+    },
+    {
+      "id": "SC3",
+      "lanes": [
+        "security"
+      ],
+      "text": "Check for secrets, tokens or credentials in the diff, unsafe defaults, disabled verification, and weakened authorization checks."
+    }
+  ]
+}

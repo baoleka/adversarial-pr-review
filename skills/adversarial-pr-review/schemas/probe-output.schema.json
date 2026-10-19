@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "probe-output.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["probe", "attempts"],
+  "properties": {
+    "probe": {"type": "string"},
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "result"],
+        "properties": {"step": {"type": "integer"}, "result": {"type": "string"}}
+      }
+    }
+  }
+}

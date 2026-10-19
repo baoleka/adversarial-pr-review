@@ -1,0 +1,27 @@
+{
+  "name": "feature",
+  "items": [
+    {
+      "id": "FT1",
+      "lanes": [
+        "breaker",
+        "external"
+      ],
+      "text": "Exercise the new feature with empty, missing, duplicated and extreme inputs, and in combination with the existing options it interacts with."
+    },
+    {
+      "id": "FT2",
+      "lanes": [
+        "tests"
+      ],
+      "text": "Check that the new tests exercise each new branch and would fail if the feature were removed or broken."
+    },
+    {
+      "id": "FT3",
+      "lanes": [
+        "contracts"
+      ],
+      "text": "Check that new public API, options or config keys are consistent with the existing ones (naming, defaults, error types, documentation)."
+    }
+  ]
+}
