@@ -27,12 +27,15 @@ or without Bash, say that the review needs Claude Code in a git repository, and 
 Run one Bash command:
 
 ```
-python3 -E -s ${CLAUDE_SKILL_DIR}/scripts/review.py start [--no-fix] <intent>
+python3 -E -s ${CLAUDE_SKILL_DIR}/scripts/review.py start [--no-fix] '<intent>'
 ```
 
-- `<intent>`: one or two sentences on what the change is meant to do, in the user's words when
+- `'<intent>'`: one or two sentences on what the change is meant to do, in the user's words when
   they gave them (for a refactor, say that behavior must not change). With no intent, pass
   nothing; the driver drafts one from the commit messages.
+  - Keep it in single quotes, so characters like `(`, `;` and `$` reach the driver as text.
+  - If it contains a single quote, reword that part ("does not" for "doesn't").
+  - Put every option before it: the driver refuses an option that comes after the intent.
 - `--no-fix`: report only. Use it when the user asks for a review without changes.
 - `--base-ref <ref>`: the branch to compare against, when the user names one.
 - `--budget <usd>`: only if the user sets a spending limit.

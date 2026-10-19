@@ -59,6 +59,23 @@ class GuardHardeningTest(TmpCase):
         }
         self.assertEqual({c: guard.shell_hazard(c) for c in cases}, cases)
 
+    def test_documented_start_command_is_one_plain_driver_call(self) -> None:
+        # SKILL.md has the session single-quote the intent. That form must stay one plain driver
+        # call whatever punctuation the intent holds; unquoted, the same intent is a shell hazard.
+        skill_md = (SCRIPTS.parent / "SKILL.md").read_text(encoding="utf-8")
+        intent = "refactor(ranges): simplify clamp; keep $(x), ${y} & `z` as text"
+        command = f"python3 -E -s {SCRIPTS / 'review.py'} start --no-fix '{intent}'"
+        self.assertEqual(
+            (
+                "review.py start [--no-fix] '<intent>'" in skill_md,
+                guard.shell_hazard(command),
+                guard.is_driver_call(command, str(SCRIPTS)),
+                shlex.split(command)[5:],
+                guard.shell_hazard(command.replace(f"'{intent}'", intent)),
+            ),
+            (True, None, True, ["--no-fix", intent], "("),
+        )
+
     def test_author_mode_closes_the_chained_command_bypass(self) -> None:
         driver = f"python3 -E -s {SCRIPTS / 'review.py'}"
         run_dir = "/r/.reviews/20260101-000000-abcd"
@@ -101,6 +118,22 @@ class DriverCommandsTest(TmpCase):
         repo.write("README.md", "new\n")
         repo.commit("docs")
         return repo
+
+    def test_start_refuses_an_option_after_the_intent(self) -> None:
+        # Without the check, `start 'docs' --no-fix` would run the fix loop with "--no-fix" as intent text.
+        repo = self.docs_change_repo()
+        misplaced = [
+            subprocess.run([*REVIEW, "start", *argv], cwd=repo.root, capture_output=True, text=True, check=False)
+            for argv in (["docs only", "--no-fix"], ["docs", "only", "--base-ref=origin/main"])
+        ]
+        self.assertEqual(
+            (
+                [(p.returncode, "comes after the intent" in p.stderr) for p in misplaced],
+                (repo.root / ".reviews").exists(),
+                review.misplaced_option(["add a --no-fix flag to the CLI"]),
+            ),
+            ([(2, True), (2, True)], False, None),
+        )
 
     def test_commands_keep_the_invoked_path_through_a_symlink(self) -> None:
         link = self.tmp / "skill-link"

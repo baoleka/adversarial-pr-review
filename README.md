@@ -12,7 +12,7 @@ Problems that were already there before the change are reported as pre-existing 
 Unless you ask for a report only, it also runs a bounded fix loop: it fixes the findings, re-checks
 each fix, and stops with APPROVE or ESCALATE.
 
-Version 2.0.3. Licensed under Apache-2.0.
+Version 2.0.4. Licensed under Apache-2.0.
 
 ## Install
 
@@ -35,7 +35,7 @@ cloud sessions you start at claude.ai/code.
 
 **Routines** don't load plugins from claude.ai. To use the review in a routine, also upload it as a
 claude.ai skill:
-1. Download `adversarial-pr-review-2.0.3.zip` from this repo's
+1. Download `adversarial-pr-review-2.0.4.zip` from this repo's
    [releases](https://github.com/baoleka/adversarial-pr-review/releases).
 2. On claude.ai, open Customize → Skills and upload it.
 

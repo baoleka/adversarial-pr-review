@@ -268,7 +268,26 @@ def find_run(args: argparse.Namespace) -> tuple[Run, Path]:
     return run, Path(run.state["repo"])
 
 
+START_OPTIONS = ("--no-fix", "--ack", "--base-ref", "--repo", "--run-dir", "--budget")
+
+
+def misplaced_option(intent_args: list[str]) -> str | None:
+    """A start option written after the intent. argparse reads everything after the intent's first
+    word as intent text, so `start 'x' --no-fix` would silently run the fix loop."""
+    for token in intent_args:
+        name = token.split("=", 1)[0]
+        if name in START_OPTIONS:
+            return name
+    return None
+
+
 def cmd_start(args: argparse.Namespace) -> int:
+    misplaced = misplaced_option(args.intent)
+    if misplaced:
+        raise ReviewError(
+            f"{misplaced} comes after the intent, where it would be read as intent text; "
+            "put every option before the intent"
+        )
     repo = snap.repo_root(Path(args.repo or Path.cwd()))
     run_dir_rel = args.run_dir or config_mod.DEFAULTS["limits"]["run_dir"]
     run_root = repo / run_dir_rel
