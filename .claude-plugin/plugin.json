@@ -1,7 +1,7 @@
 {
   "name": "adrev",
   "displayName": "Adversarial PR Review",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Adversarial PR review that proves its findings: gates first, read-only review sessions that try to break the change and run repros in isolation, a fresh verifier, and a computed verdict.",
   "author": {
     "name": "baoleka",

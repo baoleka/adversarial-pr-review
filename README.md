@@ -12,7 +12,7 @@ Problems that were already there before the change are reported as pre-existing 
 Unless you ask for a report only, it also runs a bounded fix loop: it fixes the findings, re-checks
 each fix, and stops with APPROVE or ESCALATE.
 
-Version 2.0.1. Licensed under Apache-2.0.
+Version 2.0.2. Licensed under Apache-2.0.
 
 ## Install
 
@@ -95,11 +95,16 @@ known pre-existing problems, is `skills/adversarial-pr-review/schemas/config.sch
 
 ## Cloud sessions
 
-Each cloud session is a fresh Linux VM, so set the environment up so reviews can run fully:
+Each cloud session is a fresh Linux VM. Reviews run end to end there: tested with Claude Code
+2.1.303, the review sessions start and authenticate inside the VM. Notes:
 - **History.** The review needs the merge-base with the base branch. If your clone is shallow, it
   stops and gives the `git fetch` command to run.
-- **Repros.** They need a running Docker daemon, plus a Python that isn't the system interpreter
-  first on PATH, for example a `uv venv`. Without these, reviews still run, on traced evidence.
+- **Gates.** The cloud image installs pytest as a standalone tool, so `python3 -m pytest` fails
+  there. List `pytest` in `review.config.json`, or install pytest for `python3` in your
+  environment's setup script.
+- **Repros.** They're off by default, because the Docker daemon isn't running and Python is the
+  system interpreter. Reviews still run, with findings resting on cited code instead of executed
+  tests.
 - **Unattended runs.** In a scheduled routine, a question from the driver ends the run as
   ESCALATE.
 
