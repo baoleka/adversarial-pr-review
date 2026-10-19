@@ -12,7 +12,7 @@ Problems that were already there before the change are reported as pre-existing 
 Unless you ask for a report only, it also runs a bounded fix loop: it fixes the findings, re-checks
 each fix, and stops with APPROVE or ESCALATE.
 
-Version 2.0.2. Licensed under Apache-2.0.
+Version 2.0.3. Licensed under Apache-2.0.
 
 ## Install
 
@@ -26,12 +26,23 @@ In Claude Code (terminal):
 or from a shell: `claude plugin marketplace add baoleka/adversarial-pr-review`, then
 `claude plugin install adrev@baoleka`.
 
-**Everywhere you use Claude Code, cloud sessions included:**
+**Everywhere you use Claude Code:**
 1. On claude.ai, open Customize → Plugins → Add marketplace.
 2. Enter `baoleka/adversarial-pr-review` and install `adrev`, with "Sync automatically" on.
 
-Plugins added there sync to the terminal sessions you sign in to with that account, and to your
-cloud sessions.
+Plugins added there sync to the terminal sessions you sign in to with that account, and to the
+cloud sessions you start at claude.ai/code.
+
+**Routines** don't load plugins from claude.ai. To use the review in a routine, also upload it as a
+claude.ai skill:
+1. Download `adversarial-pr-review-2.0.3.zip` from this repo's
+   [releases](https://github.com/baoleka/adversarial-pr-review/releases).
+2. On claude.ai, open Customize → Skills and upload it.
+
+Every cloud session loads it, routines included. Where the plugin is also installed, the upload
+shows up as `/anthropic-skills:adversarial-pr-review`, and `/adversarial-pr-review` stays the
+plugin's. claude.ai doesn't accept hooks in uploaded skills, so this copy has no guard hook (see
+[Data handling](#data-handling)).
 
 ## Use
 
@@ -97,6 +108,8 @@ known pre-existing problems, is `skills/adversarial-pr-review/schemas/config.sch
 
 Each cloud session is a fresh Linux VM. Reviews run end to end there: tested with Claude Code
 2.1.303, the review sessions start and authenticate inside the VM. Notes:
+- **Which copy loads.** Sessions you start at claude.ai/code load the plugin you installed on
+  claude.ai. Routines load only the claude.ai skill upload (see [Install](#install)).
 - **History.** The review needs the merge-base with the base branch. If your clone is shallow, it
   stops and gives the `git fetch` command to run.
 - **Gates.** The cloud image installs pytest as a standalone tool, so `python3 -m pytest` fails
@@ -133,6 +146,10 @@ Each cloud session is a fresh Linux VM. Reviews run end to end there: tested wit
   adrev never commits, pushes, comments or changes remote state.
 - **Permissions.** The skill pre-approves its own driver command for the turn that invokes it.
   While it's active, a hook stops anything but the driver from writing to `.reviews/`.
+  - The claude.ai skill upload can't carry that hook. Its review sessions keep their own guards,
+    but nothing stops the session that runs it from editing the review's state files.
+  - The driver hashes those files and ends in ESCALATE when one changes, unless the edit also
+    rewrites the recorded hash.
 - **No telemetry.** Besides the model calls above and the optional image pull, nothing is sent
   anywhere.
 
@@ -144,6 +161,7 @@ that. Very large diffs cost more, and are capped by the budget.
 ## Limitations
 
 - It needs Claude Code with Bash in a git repository; it doesn't run in claude.ai chat or Cowork.
+- Routines need the claude.ai skill upload, which has no guard hook.
 - Repros need Linux and a non-system Python. Paths with spaces aren't supported.
 - With `permissions.blockReadsOutsideWorkingDirectories` on, add the plugin's folder
   (`~/.claude/plugins/cache/baoleka/adrev`) to `permissions.additionalDirectories`.

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 # The skill's version: the plugin manifest takes it from here, and each run records it.
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = SKILL_DIR / "scripts"
