@@ -1,86 +1,87 @@
-# adrev: adversarial PR review for Claude Code
+<p align="center">
+  <img src="assets/banner.svg" alt="adrev: adversarial PR review for Claude Code" width="100%">
+</p>
 
-`adrev` adds the `/adversarial-pr-review` skill to Claude Code. It reviews the change on your current
-branch the way a strict reviewer would, but it proves what it claims. A deterministic driver runs:
-- your repo's own checks (lint, typecheck, tests, changelog rules);
-- independent, read-only review sessions that try to break the change;
-- the repros they write, inside network-less containers;
-- a fresh verifier that tries to refute every finding.
+<p align="center">
+  <img alt="Version 2.0.4" src="https://img.shields.io/badge/version-2.0.4-8B5CF6?style=flat-square">
+  <img alt="Claude Code 2.1.295 or later" src="https://img.shields.io/badge/Claude_Code-2.1.295%2B-F97316?style=flat-square">
+  <img alt="Python 3.10 or later" src="https://img.shields.io/badge/Python-3.10%2B-3B82F6?style=flat-square">
+  <img alt="License Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-22C55E?style=flat-square">
+  <img alt="Linux and macOS" src="https://img.shields.io/badge/platform-Linux_%7C_macOS-64748B?style=flat-square">
+</p>
 
-It then computes the verdict, APPROVE, REQUEST_CHANGES or ESCALATE, instead of letting a model vote.
-Problems that were already there before the change are reported as pre-existing and never block.
-Unless you ask for a report only, it also runs a bounded fix loop: it fixes the findings, re-checks
-each fix, and stops with APPROVE or ESCALATE.
+**A strict reviewer for your branch that has to prove what it claims.** `adrev` adds
+`/adversarial-pr-review` to Claude Code: it runs your repo's own checks, sends read-only reviewers
+to break the change, replays their repros in isolation, has a fresh model try to refute each
+finding, and computes the verdict from rules instead of letting a model vote.
 
-Version 2.0.4. Licensed under Apache-2.0.
+## Quick start
 
-## Install
+In Claude Code:
 
-In Claude Code (terminal):
-
-```
+```text
 /plugin marketplace add baoleka/adversarial-pr-review
 /plugin install adrev@baoleka
 ```
 
-or from a shell: `claude plugin marketplace add baoleka/adversarial-pr-review`, then
-`claude plugin install adrev@baoleka`.
+Then, on the branch you want reviewed:
 
-**Everywhere you use Claude Code:**
-1. On claude.ai, open Customize → Plugins → Add marketplace.
-2. Enter `baoleka/adversarial-pr-review` and install `adrev`, with "Sync automatically" on.
+```text
+/adversarial-pr-review --no-fix refactor: split the parser; behavior must not change
+```
 
-Plugins added there sync to the terminal sessions you sign in to with that account, and to the
-cloud sessions you start at claude.ai/code.
-
-**Routines** don't load plugins from claude.ai. To use the review in a routine, also upload it as a
-claude.ai skill:
-1. Download `adversarial-pr-review-2.0.4.zip` from this repo's
-   [releases](https://github.com/baoleka/adversarial-pr-review/releases).
-2. On claude.ai, open Customize → Skills and upload it.
-
-Every cloud session loads it, routines included. Where the plugin is also installed, the upload
-shows up as `/anthropic-skills:adversarial-pr-review`, and `/adversarial-pr-review` stays the
-plugin's. claude.ai doesn't accept hooks in uploaded skills, so this copy has no guard hook (see
-[Data handling](#data-handling)).
-
-## Use
-
-In a git repository, on the branch you want reviewed:
-
-- `/adversarial-pr-review --no-fix`: report only.
-- `/adversarial-pr-review`: review, fix, re-review, until APPROVE or ESCALATE.
-- Add one or two sentences of intent after the command, e.g. `/adversarial-pr-review --no-fix
-  refactor: split the parser; behavior must not change`. Without one, the intent is drafted from
+- **Intent:** a sentence or two on what the change should do. Leave it out and it's drafted from
   your commit messages.
-- `--base-ref <ref>` sets the branch to compare against. By default it's `origin/HEAD`, then
+- **`--no-fix`:** report only.
+- **`--base-ref <ref>`:** the branch to compare against. The default is `origin/HEAD`, then
   `origin/main`, then `origin/master`.
 
-The change under review is everything on the branch since its merge-base with the base, plus
-uncommitted and untracked work. The full report is written to `.reviews/<run>/report.md`, which is
-kept out of git automatically.
+> [!TIP]
+> Drop `--no-fix` to run the fix loop: Claude fixes the findings, each fix is re-checked, and the
+> run ends with APPROVE or ESCALATE. It never commits or pushes.
 
-To check that a machine is ready, ask Claude to "check the adversarial-pr-review setup". It runs
-`review.py doctor`, which tests Python, git, Docker, the `claude` CLI and its login, and runs one
-tiny confined probe session, then prints a fix for anything that fails.
+## How it works
 
-## Requirements
+<p align="center">
+  <img src="assets/how-it-works.svg" alt="The seven stages of a review: snapshot, gates, review lanes, replay, verify, verdict and the fix loop, each described below" width="100%">
+</p>
 
-- **Claude Code 2.1.295 or later**, logged in. The review sessions use the same login.
-- **Python 3.10 or later** as `python3` (3.12 recommended), standard library only, and **git 2.31 or
-  later**.
-- **Linux or macOS.** Repros run only on Linux.
-- **Optional: Docker** with a running daemon, to run repros. Without it, findings rest on traced
-  code evidence instead of executed tests.
-- **Models:** by default Opus 5.5, Sonnet 5.5, Haiku 5.5 (the probe) and Fable 5.1 (rare
-  adjudications). Run `doctor --models` to check that your plan can use them; per-repo overrides
-  go in `review.config.json`.
+1. **Snapshot.** Your branch, uncommitted and untracked work included, is frozen as a commit and
+   compared with its merge-base.
+2. **Gates.** Your repo's own checks run at the base and at the head. Only the problems the change
+   introduces count.
+3. **Review lanes.** Read-only Claude sessions, up to four at a time, try to break the change and
+   back their findings with repros. A probe session first checks that their write guard holds.
+4. **Replay.** Each repro runs at the head and at the base, in a Docker container with no network,
+   which tells introduced bugs from old ones.
+5. **Verify.** A fresh model that sees only the claim tries to refute the findings, every critical
+   and major one included.
+6. **Verdict.** Rules, not a model, decide between APPROVE, REQUEST_CHANGES and ESCALATE.
+7. **Fix loop.** Unless you pass `--no-fix`, Claude fixes or disputes the findings. Each fix is
+   re-checked and each dispute is judged, for at most three rounds.
 
-## Configure a repository (optional)
+## The verdict
 
-Without configuration, adrev runs its review sessions and verification only. To add your CI's
-checks, commit a `review.config.json` at the repository root. It is read from the merge-base, so a
-change can't weaken its own review. A small example:
+- ![APPROVE](https://img.shields.io/badge/APPROVE-22C55E?style=for-the-badge) Nothing blocks or must
+  still be addressed, every fix is verified, enough review lanes succeeded, and they covered the
+  whole change.
+- ![REQUEST_CHANGES](https://img.shields.io/badge/REQUEST__CHANGES-F59E0B?style=for-the-badge) A finding
+  blocks or must be addressed. In the fix loop, Claude gets another round instead.
+- ![ESCALATE](https://img.shields.io/badge/ESCALATE-EF4444?style=for-the-badge) It can't conclude
+  safely: a check or a lane failed, the budget or the round limit ran out, or a dispute stayed open.
+  It says what needs your decision.
+
+Problems that were already there before the change are reported as pre-existing and never block.
+The full report is written to `.reviews/<run>/report.md`, which is kept out of git.
+
+## Configure your repository
+
+Optional, but it's how the review runs your CI: commit a `review.config.json` at the repository
+root. It's read from the merge-base, so a change can't weaken its own review. Without it, adrev
+runs its review sessions and verification only.
+
+<details>
+<summary><b>Example <code>review.config.json</code></b></summary>
 
 ```json
 {
@@ -102,14 +103,41 @@ change can't weaken its own review. A small example:
 ```
 
 The full schema, with gates that use an error-count baseline, coverage, lane models, budgets and
-known pre-existing problems, is `skills/adversarial-pr-review/schemas/config.schema.json`.
+known pre-existing problems, is in
+[`skills/adversarial-pr-review/schemas/config.schema.json`](skills/adversarial-pr-review/schemas/config.schema.json).
 
-## Cloud sessions
+</details>
+
+## Requirements
+
+| Needs | Details |
+|---|---|
+| **Claude Code** | 2.1.295 or later, logged in. The review sessions use the same login. |
+| **Python and git** | Python 3.10 or later as `python3` (3.12 recommended), standard library only. git 2.31 or later. |
+| **System** | Linux or macOS. Repros run only on Linux. |
+| **Docker** *(optional)* | With a running daemon, repros run in containers. Without it, findings rest on traced code evidence instead of executed tests. |
+| **Models** | By default Opus 5.5, Sonnet 5.5, Haiku 5.5 (the probe) and Fable 5.1 (rare adjudications). Override them per repo in `review.config.json`. |
+
+> [!NOTE]
+> To check a machine, ask Claude to *"check the adversarial-pr-review setup"*. It runs
+> `review.py doctor`, which tests Python, git, Docker, the `claude` CLI and its login, runs one
+> tiny confined probe session, and prints a fix for anything that fails. `doctor --models` also
+> checks that your plan can use each model.
+
+## Where it runs
+
+| Where | How to get it |
+|---|---|
+| **Terminal** | `/plugin install adrev@baoleka`, as in the quick start. |
+| **claude.ai/code** | On claude.ai, open Customize → Plugins → Add marketplace, enter `baoleka/adversarial-pr-review`, and install `adrev` with "Sync automatically" on. It also syncs to the terminals you sign in to. |
+| **Routines** | Routines don't load plugins from claude.ai. Download `adversarial-pr-review-2.0.4.zip` from the [releases](https://github.com/baoleka/adversarial-pr-review/releases) and upload it under Customize → Skills. |
+
+<details>
+<summary><b>Notes for cloud sessions</b></summary>
 
 Each cloud session is a fresh Linux VM. Reviews run end to end there: tested with Claude Code
-2.1.303, the review sessions start and authenticate inside the VM. Notes:
-- **Which copy loads.** Sessions you start at claude.ai/code load the plugin you installed on
-  claude.ai. Routines load only the claude.ai skill upload (see [Install](#install)).
+2.1.303, the review sessions start and authenticate inside the VM.
+
 - **History.** The review needs the merge-base with the base branch. If your clone is shallow, it
   stops and gives the `git fetch` command to run.
 - **Gates.** The cloud image installs pytest as a standalone tool, so `python3 -m pytest` fails
@@ -120,43 +148,67 @@ Each cloud session is a fresh Linux VM. Reviews run end to end there: tested wit
   tests.
 - **Unattended runs.** In a scheduled routine, a question from the driver ends the run as
   ESCALATE.
+- **Both installed.** Where the plugin and the uploaded skill are both present, the upload shows
+  up as `/anthropic-skills:adversarial-pr-review`, and `/adversarial-pr-review` stays the plugin's.
 
-## Data handling
+</details>
 
-- **Review sessions.** These are separate headless `claude -p` processes started on your machine
-  (or in your cloud session) with your Claude Code login. They read the diff and the code at the
-  base and head commits. Their requests go to Anthropic, like any Claude Code session.
-  - Up to 4 run at once, under a per-run budget cap: $15 for a report and $30 for the fix loop, at
-    list prices.
-  - They run in restricted mode with an allowlist and a deny-by-default hook. They can write only in
-    their own scratch folder.
-- **Your repository's checks.** adrev runs the commands listed in your `review.config.json`, on your
-  machine, at the base and the head of the change.
-- **Containers.** If Docker works but the pinned `ubuntu:24.04` image (pinned by digest) is
-  missing, adrev pulls it from Docker Hub. Repros then run with no network, a read-only tree and no
-  capabilities.
-- **Optional second model family (off by default).** If you enable it, it sends an export of the
-  change to OpenAI's Codex, and it refuses to run unless file reads can be confined to that export.
-- **Local writes:**
-  - `.reviews/` (listed in `.git/info/exclude`);
-  - refs under `refs/reviews/`;
-  - temporary worktrees, removed after the verdict;
-  - in the fix loop, the fixes in your working tree.
+## Data and privacy
 
-  adrev never commits, pushes, comments or changes remote state.
+- **Model calls.** Review sessions are separate headless `claude -p` processes started on your
+  machine (or in your cloud session) with your Claude Code login. They read the diff and the code
+  at the base and head commits, and their requests go to Anthropic, like any Claude Code session.
+  Up to 4 run at once, under a per-run budget cap.
+- **Your checks.** adrev runs the commands listed in your `review.config.json`, on your machine,
+  at the base and the head of the change.
+- **Containers.** Repros run with no network, a read-only tree and no capabilities. If Docker works
+  but the pinned `ubuntu:24.04` image is missing, it's pulled from Docker Hub.
+- **Local writes only.** adrev never commits, pushes, comments or changes remote state.
+- **No telemetry.** Besides the model calls and the optional image pull, nothing is sent anywhere.
+
+<details>
+<summary><b>Everything it does on your machine</b></summary>
+
+- **Review sessions** run in restricted mode with an allowlist and a deny-by-default hook. They can
+  write only in their own scratch folder. The budget cap is $15 for a report and $30 for the fix
+  loop, at list prices.
+- **Local writes:** `.reviews/` (listed in `.git/info/exclude`), refs under `refs/reviews/`,
+  temporary worktrees removed after the verdict, and, in the fix loop, the fixes in your working
+  tree.
 - **Permissions.** The skill pre-approves its own driver command for the turn that invokes it.
   While it's active, a hook stops anything but the driver from writing to `.reviews/`.
   - The claude.ai skill upload can't carry that hook. Its review sessions keep their own guards,
     but nothing stops the session that runs it from editing the review's state files.
   - The driver hashes those files and ends in ESCALATE when one changes, unless the edit also
     rewrites the recorded hash.
-- **No telemetry.** Besides the model calls above and the optional image pull, nothing is sent
-  anywhere.
+- **Optional second model family (off by default).** If you enable it, it sends an export of the
+  change to OpenAI's Codex, and it refuses to run unless file reads can be confined to that export.
+
+</details>
 
 ## Cost
 
 A report on a small change typically costs $1–2 of model usage, and the fix loop about twice
 that. Very large diffs cost more, and are capped by the budget.
+
+## How well it works
+
+adrev v2 was benchmarked against an earlier single-reviewer version of the same skill (v1), on a
+stand-in repository (pallets/click 8.1.8) with planted bugs, re-introduced real upstream bugs,
+clean upstream commits, correct-but-unusual decoys, pre-existing problems, a prompt-injection item
+and large changes. On a fresh held-out set of 24 items:
+
+| | v1 | v2 |
+|---|---|---|
+| Bugs found | 100% | **100%** |
+| False alarms on clean or decoy changes | 86% | **19%** |
+| Fix loop ends in a correct approval | 79% | **100%** |
+| Approvals of still-broken code | 0% | **0%** |
+| Median cost per review | 1× | 1.2× |
+
+On the first held-out set (26 items), v2 had 0% false alarms against 56%, 94% loop success against
+69%, and 0% wrong approvals against 19%. The samples are small, so read these as directions rather
+than precise rates.
 
 ## Limitations
 
@@ -168,29 +220,6 @@ that. Very large diffs cost more, and are capped by the budget.
 - Gates and checks know Python tooling best (ruff, mypy, pytest, coverage); other tools work
   through the `regex` and `exit` parsers.
 
-## How well it works
-
-adrev v2 was benchmarked against an earlier single-reviewer version of the same skill (v1). The
-corpus:
-- a stand-in repository (pallets/click 8.1.8);
-- planted bugs and re-introduced real upstream bugs;
-- clean upstream commits and correct-but-unusual decoys;
-- pre-existing problems, a prompt-injection item and large changes.
-
-On a fresh held-out set of 24 items:
-
-| | v1 | v2 |
-|---|---|---|
-| Bugs found | 100% | 100% |
-| False alarms on clean or decoy changes | 86% | 19% |
-| Fix loop ends in a correct approval | 79% | 100% |
-| Approvals of still-broken code | 0% | 0% |
-| Median cost per review | 1× | 1.2× |
-
-On the first held-out set (26 items), v2 had 0% false alarms against 56%, 94% loop success against
-69%, and 0% wrong approvals against 19%. The samples are small, so read these as directions rather
-than precise rates.
-
 ## License
 
-Apache-2.0. See `LICENSE` and `NOTICE`.
+Apache-2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

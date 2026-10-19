@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 300" width="1280" height="300" role="img" aria-labelledby="title desc">
+  <title id="title">adrev: adversarial PR review for Claude Code</title>
+  <desc id="desc">Adversarial PR review that proves its findings. Gates, reviewers, repros, a verifier and a computed verdict.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#141C38"/>
+    </linearGradient>
+    <radialGradient id="glow-violet" cx="0.84" cy="0.2" r="0.5">
+      <stop offset="0" stop-color="#A78BFA" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-blue" cx="0.1" cy="1" r="0.55">
+      <stop offset="0" stop-color="#60A5FA" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="0.5" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#F472B6"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ADE80"/>
+      <stop offset="1" stop-color="#16A34A"/>
+    </linearGradient>
+  </defs>
+  <style>
+    text { font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, "DejaVu Sans", sans-serif; }
+    .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+    .word { font-size: 112px; font-weight: 800; letter-spacing: -3px; }
+    .tagline { font-size: 32px; font-weight: 600; fill: #E2E8F0; }
+    .flow { font-size: 20px; fill: #94A3B8; }
+    .lane { fill: none; stroke-width: 9; stroke-linecap: round; }
+  </style>
+
+  <rect width="1280" height="300" rx="32" fill="url(#bg)"/>
+  <rect width="1280" height="300" rx="32" fill="url(#glow-violet)"/>
+  <rect width="1280" height="300" rx="32" fill="url(#glow-blue)"/>
+  <rect x="0.75" y="0.75" width="1278.5" height="298.5" rx="31.5" fill="none" stroke="#24304F" stroke-width="1.5"/>
+
+  <text x="68" y="150" class="word" fill="url(#wordmark)">adrev</text>
+  <text x="72" y="206" class="tagline">Adversarial PR review that proves its findings</text>
+  <text x="73" y="250" class="flow mono">for Claude Code · gates → reviewers → repros → verifier → verdict</text>
+
+  <!-- Four review lanes converge into a verdict -->
+  <path d="M968,84 C1048,84 1062,150 1112,150" class="lane" stroke="#60A5FA"/>
+  <path d="M968,128 C1040,128 1060,150 1112,150" class="lane" stroke="#2DD4BF"/>
+  <path d="M968,172 C1040,172 1060,150 1112,150" class="lane" stroke="#A78BFA"/>
+  <path d="M968,216 C1048,216 1062,150 1112,150" class="lane" stroke="#F472B6"/>
+  <circle cx="968" cy="84" r="7" fill="#60A5FA"/>
+  <circle cx="968" cy="128" r="7" fill="#2DD4BF"/>
+  <circle cx="968" cy="172" r="7" fill="#A78BFA"/>
+  <circle cx="968" cy="216" r="7" fill="#F472B6"/>
+  <circle cx="1166" cy="150" r="52" fill="#0F172A" stroke="url(#ring)" stroke-width="6"/>
+  <path d="M1142,151 L1160,169 L1192,133" fill="none" stroke="#4ADE80" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

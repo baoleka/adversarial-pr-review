@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" width="1280" height="780" role="img" aria-labelledby="title desc">
+  <title id="title">How adrev reviews a branch</title>
+  <desc id="desc">Seven stages. 1 Snapshot: your branch and uncommitted work are frozen as a commit. 2 Gates: your repository's own checks run at base and head, and only new problems count. 3 Review lanes: up to four read-only Claude sessions try to break the change. 4 Replay: each repro runs at head and base in Docker with no network. 5 Verify: a fresh model, which sees only the claim, tries to refute the findings. 6 Verdict: rules compute APPROVE, REQUEST_CHANGES or ESCALATE. 7 Fix loop, unless you pass --no-fix: Claude fixes the findings and each fix is re-checked, for at most three rounds. Pre-existing problems never block, findings are quoted at file and line, and each run has a budget cap.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#131B36"/>
+    </linearGradient>
+    <radialGradient id="glow-violet" cx="0.82" cy="0.05" r="0.55">
+      <stop offset="0" stop-color="#A78BFA" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-blue" cx="0.08" cy="0.95" r="0.5">
+      <stop offset="0" stop-color="#60A5FA" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="head-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#60A5FA"/></marker>
+    <marker id="head-teal" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2DD4BF"/></marker>
+    <marker id="head-violet" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A78BFA"/></marker>
+    <marker id="head-pink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F472B6"/></marker>
+    <marker id="head-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#FBBF24"/></marker>
+    <marker id="head-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#FB923C"/></marker>
+  </defs>
+  <style>
+    text { font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, "DejaVu Sans", sans-serif; }
+    .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+    .heading { font-size: 34px; font-weight: 700; fill: #F1F5F9; }
+    .command { font-size: 20px; fill: #94A3B8; }
+    .card { fill: #131B33; stroke-width: 1.5; stroke-opacity: 0.45; }
+    .num { font-size: 21px; font-weight: 800; fill: #0B1020; text-anchor: middle; }
+    .stage { font-size: 25px; font-weight: 700; fill: #F1F5F9; }
+    .caption { font-size: 20px; fill: #A9B6CC; }
+    .chip-text { font-size: 20px; font-weight: 500; text-anchor: middle; }
+    .verdict-text { font-size: 20px; font-weight: 700; text-anchor: middle; fill: #0B1020; }
+    .verdict-note { font-size: 20px; fill: #A9B6CC; text-anchor: middle; }
+    .pill { fill: #131B33; stroke: #2A3557; stroke-width: 1.5; }
+    .pill-text { font-size: 20px; fill: #CBD5E1; }
+    .arrow { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 9 9; animation: flow 1.2s linear infinite; }
+    @keyframes flow { to { stroke-dashoffset: -18; } }
+    @media (prefers-reduced-motion: reduce) { .arrow { animation: none; } }
+  </style>
+
+  <!-- Card -->
+  <rect width="1280" height="780" rx="32" fill="url(#bg)"/>
+  <rect width="1280" height="780" rx="32" fill="url(#glow-violet)"/>
+  <rect width="1280" height="780" rx="32" fill="url(#glow-blue)"/>
+  <rect x="0.75" y="0.75" width="1278.5" height="778.5" rx="31.5" fill="none" stroke="#24304F" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="48" y="84" class="heading">How a review runs</text>
+  <text x="1232" y="84" class="command mono" text-anchor="end">/adversarial-pr-review on your branch</text>
+
+  <!-- 1 Snapshot -->
+  <g>
+    <rect x="48" y="128" width="266" height="232" rx="20" class="card" stroke="#60A5FA"/>
+    <rect x="70" y="126" width="222" height="4" rx="2" fill="#60A5FA"/>
+    <circle cx="84" cy="174" r="18" fill="#60A5FA"/>
+    <text x="84" y="181" class="num">1</text>
+    <text x="112" y="183" class="stage">Snapshot</text>
+    <text class="caption"><tspan x="70" y="230">your branch, with</tspan><tspan x="70" y="257">uncommitted work,</tspan><tspan x="70" y="284">frozen as a commit</tspan></text>
+    <rect x="70" y="306" width="222" height="36" rx="18" fill="#60A5FA" fill-opacity="0.14" stroke="#60A5FA" stroke-opacity="0.5"/>
+    <text x="181" y="331" class="chip-text" fill="#93C5FD">base &amp; head trees</text>
+  </g>
+
+  <!-- 2 Gates -->
+  <g>
+    <rect x="354" y="128" width="266" height="232" rx="20" class="card" stroke="#2DD4BF"/>
+    <rect x="376" y="126" width="222" height="4" rx="2" fill="#2DD4BF"/>
+    <circle cx="390" cy="174" r="18" fill="#2DD4BF"/>
+    <text x="390" y="181" class="num">2</text>
+    <text x="418" y="183" class="stage">Gates</text>
+    <text class="caption"><tspan x="376" y="230">your repo's checks</tspan><tspan x="376" y="257">at base and head;</tspan><tspan x="376" y="284">only new ones count</tspan></text>
+    <rect x="376" y="306" width="222" height="36" rx="18" fill="#2DD4BF" fill-opacity="0.14" stroke="#2DD4BF" stroke-opacity="0.5"/>
+    <text x="487" y="331" class="chip-text" fill="#5EEAD4">from your config</text>
+  </g>
+
+  <!-- 3 Review lanes -->
+  <g>
+    <rect x="660" y="128" width="266" height="232" rx="20" class="card" stroke="#A78BFA"/>
+    <rect x="682" y="126" width="222" height="4" rx="2" fill="#A78BFA"/>
+    <circle cx="696" cy="174" r="18" fill="#A78BFA"/>
+    <text x="696" y="181" class="num">3</text>
+    <text x="724" y="183" class="stage">Review lanes</text>
+    <text class="caption"><tspan x="682" y="230">read-only Claude</tspan><tspan x="682" y="257">sessions try to</tspan><tspan x="682" y="284">break the change</tspan></text>
+    <rect x="682" y="306" width="222" height="36" rx="18" fill="#A78BFA" fill-opacity="0.14" stroke="#A78BFA" stroke-opacity="0.5"/>
+    <text x="793" y="331" class="chip-text" fill="#C4B5FD">up to 4 in parallel</text>
+  </g>
+
+  <!-- 4 Replay -->
+  <g>
+    <rect x="966" y="128" width="266" height="232" rx="20" class="card" stroke="#F472B6"/>
+    <rect x="988" y="126" width="222" height="4" rx="2" fill="#F472B6"/>
+    <circle cx="1002" cy="174" r="18" fill="#F472B6"/>
+    <text x="1002" y="181" class="num">4</text>
+    <text x="1030" y="183" class="stage">Replay</text>
+    <text class="caption"><tspan x="988" y="230">each repro runs at</tspan><tspan x="988" y="257">head and at base,</tspan><tspan x="988" y="284">in isolation</tspan></text>
+    <rect x="988" y="306" width="222" height="36" rx="18" fill="#F472B6" fill-opacity="0.14" stroke="#F472B6" stroke-opacity="0.5"/>
+    <text x="1099" y="331" class="chip-text" fill="#F9A8D4">Docker, no network</text>
+  </g>
+
+  <!-- 5 Verify -->
+  <g>
+    <rect x="966" y="430" width="266" height="220" rx="20" class="card" stroke="#FBBF24"/>
+    <rect x="988" y="428" width="222" height="4" rx="2" fill="#FBBF24"/>
+    <circle cx="1002" cy="476" r="18" fill="#FBBF24"/>
+    <text x="1002" y="483" class="num">5</text>
+    <text x="1030" y="485" class="stage">Verify</text>
+    <text class="caption"><tspan x="988" y="526">a fresh model tries</tspan><tspan x="988" y="552">to refute findings</tspan></text>
+    <rect x="988" y="600" width="222" height="36" rx="18" fill="#FBBF24" fill-opacity="0.14" stroke="#FBBF24" stroke-opacity="0.5"/>
+    <text x="1099" y="625" class="chip-text" fill="#FCD34D">sees only the claim</text>
+  </g>
+
+  <!-- 6 Verdict -->
+  <g>
+    <rect x="354" y="430" width="572" height="220" rx="20" class="card" stroke="#E2E8F0" stroke-opacity="0.3"/>
+    <rect x="376" y="428" width="528" height="4" rx="2" fill="#E2E8F0"/>
+    <circle cx="390" cy="476" r="18" fill="#E2E8F0"/>
+    <text x="390" y="483" class="num">6</text>
+    <text x="418" y="485" class="stage">Verdict</text>
+    <text x="904" y="485" class="caption" text-anchor="end">computed by rules, not a vote</text>
+    <rect x="384" y="532" width="132" height="44" rx="22" fill="#22C55E"/>
+    <text x="450" y="561" class="verdict-text mono">APPROVE</text>
+    <text x="450" y="618" class="verdict-note">ship it</text>
+    <rect x="532" y="532" width="226" height="44" rx="22" fill="#F59E0B"/>
+    <text x="645" y="561" class="verdict-text mono">REQUEST_CHANGES</text>
+    <text x="645" y="618" class="verdict-note">fix it first</text>
+    <rect x="774" y="532" width="132" height="44" rx="22" fill="#EF4444"/>
+    <text x="840" y="561" class="verdict-text mono" fill="#FFF7F7">ESCALATE</text>
+    <text x="840" y="618" class="verdict-note">you decide</text>
+  </g>
+
+  <!-- 7 Fix loop -->
+  <g>
+    <rect x="48" y="430" width="266" height="220" rx="20" class="card" stroke="#FB923C" stroke-opacity="0.8" stroke-dasharray="8 7"/>
+    <circle cx="84" cy="476" r="18" fill="#FB923C"/>
+    <text x="84" y="483" class="num">7</text>
+    <text x="112" y="485" class="stage">Fix loop</text>
+    <text class="caption"><tspan x="70" y="526">Claude fixes, each</tspan><tspan x="70" y="552">fix is re-checked;</tspan><tspan x="70" y="578">off with</tspan><tspan dx="8" class="mono" fill="#FDBA74">--no-fix</tspan></text>
+    <rect x="70" y="600" width="222" height="36" rx="18" fill="#FB923C" fill-opacity="0.14" stroke="#FB923C" stroke-opacity="0.5"/>
+    <text x="181" y="625" class="chip-text" fill="#FDBA74">at most 3 rounds</text>
+  </g>
+
+  <!-- Arrows: the review's flow, then the fix loop back to 1 -->
+  <path d="M320,244 L346,244" class="arrow" stroke="#60A5FA" marker-end="url(#head-blue)"/>
+  <path d="M626,244 L652,244" class="arrow" stroke="#2DD4BF" marker-end="url(#head-teal)"/>
+  <path d="M932,244 L958,244" class="arrow" stroke="#A78BFA" marker-end="url(#head-violet)"/>
+  <path d="M1099,366 L1099,422" class="arrow" stroke="#F472B6" marker-end="url(#head-pink)"/>
+  <path d="M960,540 L934,540" class="arrow" stroke="#FBBF24" marker-end="url(#head-amber)"/>
+  <path d="M348,540 L322,540" class="arrow" stroke="#FB923C" marker-end="url(#head-orange)"/>
+  <path d="M181,424 L181,368" class="arrow" stroke="#FB923C" marker-end="url(#head-orange)"/>
+
+  <!-- Guarantees -->
+  <g>
+    <rect x="48" y="684" width="404" height="48" rx="24" class="pill"/>
+    <circle cx="76" cy="708" r="11" fill="#22C55E"/>
+    <path d="M70.5,708.5 L74.5,712.5 L81.5,704.5" fill="none" stroke="#0B1020" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="98" y="715" class="pill-text">pre-existing problems never block</text>
+
+    <rect x="468" y="684" width="336" height="48" rx="24" class="pill"/>
+    <circle cx="496" cy="708" r="11" fill="#22C55E"/>
+    <path d="M490.5,708.5 L494.5,712.5 L501.5,704.5" fill="none" stroke="#0B1020" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="518" y="715" class="pill-text">findings quoted at file:line</text>
+
+    <rect x="820" y="684" width="412" height="48" rx="24" class="pill"/>
+    <circle cx="848" cy="708" r="11" fill="#22C55E"/>
+    <path d="M842.5,708.5 L846.5,712.5 L853.5,704.5" fill="none" stroke="#0B1020" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="870" y="715" class="pill-text">budget cap: $15 report, $30 loop</text>
+  </g>
+</svg>
