@@ -12,7 +12,7 @@ Problems that were already there before the change are reported as pre-existing 
 Unless you ask for a report only, it also runs a bounded fix loop: it fixes the findings, re-checks
 each fix, and stops with APPROVE or ESCALATE.
 
-Version 2.0.0. Licensed under Apache-2.0.
+Version 2.0.1. Licensed under Apache-2.0.
 
 ## Install
 

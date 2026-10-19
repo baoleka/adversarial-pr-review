@@ -272,7 +272,12 @@ def collect(gate: dict[str, Any], side: str, out_dir: Path, root: Path, job_stat
                 raise ValueError(f"pytest exited {code}")
             report_path = out_dir / "pytest-report.json"
             if not report_path.is_file():
-                raise ValueError("pytest report missing (plugin not loaded?)")
+                # Most often pytest isn't importable by this interpreter (`python -m pytest` exits 1
+                # with "No module named pytest"); show what it printed.
+                tail = (_read(out_dir / "main.err") + "\n" + main_out).strip().splitlines()[-3:]
+                raise ValueError(
+                    "pytest produced no report (is pytest importable by the gate's interpreter?): " + " | ".join(tail)
+                )
             res.pytest = parsers.parse_pytest_report(report_path.read_text(encoding="utf-8"))
             res.diagnostics = parsers.pytest_failures(res.pytest)
             if gate.get("coverage_xml") and (out_dir / Path(gate["coverage_xml"]).name).is_file():

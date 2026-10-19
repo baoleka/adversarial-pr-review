@@ -22,7 +22,7 @@ import phases_mech
 import replay
 import review
 from engine import Ctx
-from test_m3_lanes import BASE_SRC, HEAD_SRC, REVIEW, TmpCase
+from test_m3_lanes import BASE_SRC, CONFIG, HEAD_SRC, REVIEW, TmpCase
 
 import snapshot as snap
 from common import ReviewError
@@ -143,6 +143,41 @@ class DriverCommandsTest(TmpCase):
             ["python3", "-E", "-s", str(SCRIPTS / "review.py"), "ingest", action["id"], "--run", out["run"]]
         )
         self.assertEqual((action["kind"], action["ingest"]), ("ask", expected + " --answer 'THE ANSWER'"))
+
+
+class UnusableGateTest(TmpCase):
+    def test_a_gate_without_a_report_escalates_with_a_report_and_no_internal_error(self) -> None:
+        config = json.loads(json.dumps(CONFIG))
+        config["repo"]["gates"] = [
+            {
+                "name": "pytest",
+                "argv": ["python3", "-c", "import sys; print('No module named pytest', file=sys.stderr); sys.exit(1)"],
+                "parser": "pytest",
+                "timeout_s": 60,
+            }
+        ]
+        repo = FixtureRepo.create(
+            self.tmp, {"pkg/ranges.py": BASE_SRC, "pkg/__init__.py": "", "review.config.json": json.dumps(config)}
+        )
+        repo.write("pkg/ranges.py", HEAD_SRC)
+        repo.commit("change clamp")
+        out = run_review(repo.root, "start", "--no-fix", "change clamp")
+        action = out["action"]
+        while action["kind"] in ("exec", "wait"):
+            action = run_review(repo.root, *action["argv"][4:])["action"]
+        run_dir = Path(out["run"])
+        verdict = json.loads((run_dir / "verdict.json").read_text())
+        details = " ".join(e["detail"] for e in verdict["escalations"])
+        self.assertEqual(
+            (
+                action["kind"],
+                sorted({e["condition"] for e in verdict["escalations"]}),
+                "No module named pytest" in details,
+                "internal error" in details,
+                (run_dir / "report.md").is_file(),
+            ),
+            ("escalate", ["degraded-gate"], True, False, True),
+        )
 
 
 class ShallowCloneTest(TmpCase):

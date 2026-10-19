@@ -30,8 +30,14 @@ PROTECTED_DROP = {"breaker"}
 
 
 def load_store(ctx: Ctx) -> tuple[dict[str, Any], dict[str, Any]]:
-    store = read_json(ctx.run.dir / "findings.json")
-    return store, store["rounds"][str(ctx.round)]
+    """The findings store and this round's entry. A run that escalated before CHECKS (an unusable
+    gate) has none yet; the verdict then starts from an empty round."""
+    path = ctx.run.dir / "findings.json"
+    store: dict[str, Any] = read_json(path) if path.is_file() else {"rounds": {}, "current_round": ctx.round}
+    rstore: dict[str, Any] = store.setdefault("rounds", {}).setdefault(
+        str(ctx.round), {"mechanical": [], "appendix": {}}
+    )
+    return store, rstore
 
 
 # ---------------------------------------------------------------- REPLAY
